@@ -1,9 +1,10 @@
 import os.path
-import json
+import requests
+from http import HTTPStatus
 import pandas as pd
 import sqlite3
 
-DATABASE_URL = './movie.sqlite'
+DATABASE_URL = './movie_mark/movie.sqlite'
 
 
 class DBConnection:
@@ -39,6 +40,7 @@ def build_schema():
             print('execute script')
             connect.executescript(f_p.read())
         connect.commit()
+    delete_all()
 
 
 def get_director_or_actor_id(name):
@@ -49,7 +51,7 @@ def get_director_or_actor_id(name):
             WHERE name = ?
         ''', (name,))
     p_id = res.fetchone()
-    if not p_id:
+    if p_id is None:
         return -1
     return p_id[0]
 
@@ -80,13 +82,14 @@ def get_keyword_id(keyword):
 
 def get_movie_id(movie):
     cursor = db_connection.get_cursor()
+    # print(movie['title'], movie['year'], get_director_or_actor_id(movie['director_id']))
     res = cursor.execute(f'''
         SELECT id
         FROM movie
         WHERE title = ? AND year = ? AND director_id = ?
-    ''', (movie['title'], movie['year'], get_director_or_actor_id(movie['director_id'])))
+    ''', (movie['title'], movie['year'], movie['director_id']))
     movie_id = res.fetchone()
-    if not movie_id:
+    if movie_id is None:
         return -1
     return movie_id[0]
 
@@ -194,12 +197,16 @@ def insert_has_keyword(keyword: list, movie_id):
 
 
 def imdb_insert_movie(**kwargs):
+    def validate_img_link(link):
+        if requests.get(link).status_code != HTTPStatus.OK:
+            return None
+        return link
     connection = db_connection.get_connection()
     cursor = connection.cursor()
     cursor.execute(f'''
                 INSERT INTO movie(id, title, poster_link, year, imdb_rating, runtime, overview, director_id)
                 VALUES(?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (kwargs['movie_id'], kwargs['title'], kwargs['poster_link'],
+            ''', (kwargs['movie_id'], kwargs['title'], validate_img_link(kwargs['poster_link']),
                   kwargs['year'], kwargs['rating'], kwargs['runtime'], kwargs['overview'],
                   get_director_or_actor_id(kwargs['director'])))
     connection.commit()
@@ -301,6 +308,34 @@ def import_tmdb_dataset(base=0):
         print(f'''inserted {cnt} movies''')
     return cnt
 
+def delete_all():
+    connection = db_connection.get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute(f'''
+        DELETE FROM genre
+    ''')
+    cursor.execute(f'''
+            DELETE FROM people
+        ''')
+    cursor.execute(f'''
+            DELETE FROM keyword
+        ''')
+    cursor.execute(f'''
+            DELETE FROM movie
+        ''')
+    cursor.execute(f'''
+            DELETE FROM has_keyword
+        ''')
+    cursor.execute(f'''
+            DELETE FROM is_genre
+        ''')
+    cursor.execute(f'''
+            DELETE FROM user
+        ''')
+    cursor.execute(f'''
+            DELETE FROM like_movie
+        ''')
 
 def main():
     build_schema()

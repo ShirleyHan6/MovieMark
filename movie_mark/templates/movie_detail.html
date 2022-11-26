@@ -6,6 +6,7 @@
 {% block content %}
 <script>
     let controller = null;
+
     function add_to_list(elem) {
         let url = elem.getAttribute('forward_url')
         if (controller !== null)
@@ -14,8 +15,8 @@
         console.log(url)
         fetch(url, {signal: controller.signal})
             .then(() => {
-                elem.disabled=true
-                elem.innerText='Added to ' + (elem.getAttribute('btn-type') === 'watchlist' ? 'Watchlist' : 'Favourite')
+                elem.disabled = true
+                elem.innerText = 'Added to ' + (elem.getAttribute('btn-type') === 'watchlist' ? 'Watchlist' : 'Favourite')
             })
             .catch(function (err) {
                 console.log(err);
@@ -25,43 +26,47 @@
 <div class="row">
     <div class="col-12 mt-4">
         <div>
-            <img src="{{movie['poster_link']}}">
+            {% if movie['poster_link'] %}
+            <img src="{{movie['poster_link']}}" class="card-img-top">
+            {% else %}
+            <img class="card-img-top" src="{{url_for('static', filename = 'not-found-image.png') }}">
+            {% endif %}
         </div>
         <div class="mt-3">
             {% if g.user %}
-                {% if added_to_watchlist %}
-                    <button onclick="add_to_list(this)"
-                            class="btn btn-primary mt-auto"
-                            disabled
-                    >
-                        Added to Watchlist
-                    </button>
-                {% else %}
-                    <button onclick="add_to_list(this)"
-                            class="btn btn-primary mt-auto"
-                            btn-type="watchlist"
-                            forward_url="{{url_for('main.add_to_watchlist', movie_id=movie['id'])}}"
-                    >
-                        Add to Watchlist
-                    </button>
-                {% endif %}
-                {% if added_to_favourite %}
-                    <button onclick="add_to_list(this)"
-                            class="btn btn-primary mt-auto"
-                            disabled
-                    >
-                        Added to Favourite
-                    </button>
-                {% else %}
-                    <button onclick="add_to_list(this)"
-                            class="btn btn-primary mt-auto"
-                            btn-type="favourite"
-                            forward_url="{{url_for('main.add_to_favourite', movie_id=movie['id'])}}"
+            {% if added_to_watchlist %}
+            <button onclick="add_to_list(this)"
+                    class="btn btn-primary mt-auto"
+                    disabled
+            >
+                Added to Watchlist
+            </button>
+            {% else %}
+            <button onclick="add_to_list(this)"
+                    class="btn btn-primary mt-auto"
+                    btn-type="watchlist"
+                    forward_url="{{url_for('main.add_to_watchlist', movie_id=movie['id'])}}"
+            >
+                Add to Watchlist
+            </button>
+            {% endif %}
+            {% if added_to_favourite %}
+            <button onclick="add_to_list(this)"
+                    class="btn btn-primary mt-auto"
+                    disabled
+            >
+                Added to Favourite
+            </button>
+            {% else %}
+            <button onclick="add_to_list(this)"
+                    class="btn btn-primary mt-auto"
+                    btn-type="favourite"
+                    forward_url="{{url_for('main.add_to_favourite', movie_id=movie['id'])}}"
 
-                    >
-                        Add to Favourite
-                    </button>
-                {% endif %}
+            >
+                Add to Favourite
+            </button>
+            {% endif %}
             {% endif %}
         </div>
     </div>
@@ -73,17 +78,20 @@
             {{movie['overview']}}
         </p>
         <div>
+            <span><strong>year: {{movie['year']}}</strong></span>
+        </div>
+        <div>
             {% if movie['imdb_rating'] %}
-                <span> <strong>IMDB Rating: {{movie['imdb_rating']}}</strong></span>
+            <span> <strong>IMDB Rating: {{movie['imdb_rating']}}</strong></span>
             {% else %}
-                <span> <strong>IMDB Rating: N/A</strong></span>
+            <span> <strong>IMDB Rating: N/A</strong></span>
             {% endif %}
         </div>
         <div>
             {% if movie['tmdb_rating'] %}
-                <span> <strong>TMDB Rating: {{movie['tmdb_rating']}}</strong></span>
+            <span> <strong>TMDB Rating: {{movie['tmdb_rating']}}</strong></span>
             {% else %}
-                <span> <strong>TMDB Rating: N/A</strong></span>
+            <span> <strong>TMDB Rating: N/A</strong></span>
             {% endif %}
         </div>
         <div>
@@ -114,17 +122,17 @@
                 {% endfor %}
             </span>
         </div>
-<!--        <div class="m-bot15"><strong>Price : </strong> <span class="amount-old">$544</span> <span-->
-<!--                class="pro-price"> $300.00</span></div>-->
-<!--        <div class="form-group">-->
-<!--            <label>Quantity</label>-->
-<!--            <input type="quantiy" placeholder="1" class="form-control quantity">-->
-<!--        </div>-->
-<!--        <p>-->
-<!--            <button class="btn btn-round btn-danger" type="button"><i class="fa fa-shopping-cart"></i> Add to-->
-<!--                Cart-->
-<!--            </button>-->
-<!--        </p>-->
+        <!--        <div class="m-bot15"><strong>Price : </strong> <span class="amount-old">$544</span> <span-->
+        <!--                class="pro-price"> $300.00</span></div>-->
+        <!--        <div class="form-group">-->
+        <!--            <label>Quantity</label>-->
+        <!--            <input type="quantiy" placeholder="1" class="form-control quantity">-->
+        <!--        </div>-->
+        <!--        <p>-->
+        <!--            <button class="btn btn-round btn-danger" type="button"><i class="fa fa-shopping-cart"></i> Add to-->
+        <!--                Cart-->
+        <!--            </button>-->
+        <!--        </p>-->
     </div>
 </div>
 

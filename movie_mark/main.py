@@ -28,8 +28,6 @@ def detail():
     genres = query_genres_by_id(movie_id)
     director = query_director_by_id(movie_id)
     added_to_favourite, added_to_watchlist = query_like_status_by_id(g.user['id'], movie_id)
-    # for actor in actors:
-    #     print(actor['name'])
     return render_template('movie_detail.html', movie=movie, genres=genres, keywords=keywords, actors=actors,
                            director=director, added_to_watchlist=added_to_watchlist,
                            added_to_favourite=added_to_favourite)
