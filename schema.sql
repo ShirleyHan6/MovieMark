@@ -78,7 +78,7 @@ CREATE TABLE like_movie (
     user_id INTEGER,
     movie_id INTEGER,
     watched INTEGER,
-    timestamp DATE,
+    save_time DATETIME,
     FOREIGN KEY (user_id) REFERENCES user(id),
     FOREIGN KEY (movie_id) REFERENCES movie(id)
 );

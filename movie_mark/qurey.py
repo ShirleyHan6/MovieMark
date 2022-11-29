@@ -1,5 +1,5 @@
 from .db import get_db
-
+from datetime import datetime
 
 def query_movie_cnt():
     con = get_db()
@@ -101,7 +101,7 @@ def query_like_status_by_id(user_id, movie_id):
             WHERE user_id=? AND movie_id=? AND watched=1
         ''', (user_id, movie_id, ))
     added_to_favourite = res.fetchone()[0] > 0
-    return added_to_watchlist, added_to_favourite
+    return added_to_favourite, added_to_watchlist
 
 
 def query_movie_by_keyword(keyword, page, limit):
@@ -177,7 +177,7 @@ def query_watchlist_by_user(user_id, page, limit=21):
     con = get_db()
     cursor = con.cursor()
     res = cursor.execute(f'''
-            SELECT m.*
+            SELECT m.*, l.save_time
             FROM movie m JOIN like_movie l ON m.id = l.movie_id
             WHERE l.user_id = ? AND l.watched = 0
             LIMIT ? OFFSET ?
@@ -189,7 +189,7 @@ def query_favourite_by_user(user_id, page, limit=21):
     con = get_db()
     cursor = con.cursor()
     res = cursor.execute(f'''
-                SELECT m.*
+                SELECT m.*, l.save_time
                 FROM movie m JOIN like_movie l ON m.id = l.movie_id
                 WHERE l.user_id = ? AND l.watched = 1
                 LIMIT ? OFFSET ?
@@ -202,9 +202,9 @@ def like_movie(user_id, movie_id, watched):
     con = get_db()
     cursor = con.cursor()
     cursor.execute(f'''
-        INSERT INTO like_movie(user_id, movie_id, watched, timestamp)
-        VALUES(?, ?, ?, TIME())
-    ''', (user_id, movie_id, watched))
+        INSERT INTO like_movie(user_id, movie_id, watched, save_time)
+        VALUES(?, ?, ?, ?)
+    ''', (user_id, movie_id, watched, datetime.now()))
     con.commit()
 
 

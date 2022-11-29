@@ -198,7 +198,7 @@ def insert_has_keyword(keyword: list, movie_id):
 
 def imdb_insert_movie(**kwargs):
     def validate_img_link(link):
-        if requests.get(link).status_code != HTTPStatus.OK:
+        if requests.head(link).status_code != HTTPStatus.OK:
             return None
         return link
     connection = db_connection.get_connection()

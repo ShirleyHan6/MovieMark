@@ -16,7 +16,7 @@ def index():
     cnt = query_movie_cnt()
     return render_template('index.html', movies=movies, page=page, max_page=cnt / limit + 1)
 
-
+@login_required
 @main_bp.route('/detail', methods=['GET'])
 def detail():
     if 'movie_id' not in request.args:
@@ -28,6 +28,7 @@ def detail():
     genres = query_genres_by_id(movie_id)
     director = query_director_by_id(movie_id)
     added_to_favourite, added_to_watchlist = query_like_status_by_id(g.user['id'], movie_id)
+    print(added_to_favourite, added_to_watchlist)
     return render_template('movie_detail.html', movie=movie, genres=genres, keywords=keywords, actors=actors,
                            director=director, added_to_watchlist=added_to_watchlist,
                            added_to_favourite=added_to_favourite)
