@@ -217,13 +217,14 @@ def create_review(user_id, movie_id, content):
     ''', (user_id, movie_id, content, datetime.now()))
     con.commit()
 
-def query_review_by_user_and_movie(user_id, movie_id):
+def query_review_by_movie(movie_id):
     cursor = get_db().cursor()
     res = cursor.execute(f'''
-        SELECT *
-        FROM review
-        WHERE user_id=? AND movie_id=?
-    ''', (user_id, movie_id))
+        SELECT r.*, u.username
+        FROM review r
+        JOIN user u ON u.id=r.user_id
+        WHERE movie_id=?
+    ''', (movie_id, ))
     return res.fetchall()
 
 
