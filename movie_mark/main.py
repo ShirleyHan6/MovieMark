@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, g
 from .qurey import query_movie, query_movie_cnt, query_movie_by_id, query_genres_by_id, query_keywords_by_id,\
     query_actors_by_id, query_movie_by_actor, query_movie_by_genre, query_movie_by_keyword, query_movie_by_director, \
     query_movie_by_title, query_director_by_id, like_movie, query_like_status_by_id, query_watchlist_by_user, \
-    query_favourite_by_user
+    query_favourite_by_user, create_review, query_review_by_user_and_movie
 from .auth import login_required
 
 main_bp = Blueprint('main', __name__)
@@ -17,21 +17,30 @@ def index():
     return render_template('index.html', movies=movies, page=page, max_page=cnt / limit + 1)
 
 @login_required
-@main_bp.route('/detail', methods=['GET'])
+@main_bp.route('/detail', methods=['GET', 'POST'])
 def detail():
+    print('received')
     if 'movie_id' not in request.args:
         return redirect(url_for('main.index'))
     movie_id = int(request.args.get('movie_id'))
+    print(movie_id)
+    if request.method == 'POST':
+        print('post')
+        content = request.form['review']
+        print(request.form['review'], '!')
+        create_review(g.user['id'], movie_id, content)
+
+    reviews = query_review_by_user_and_movie(g.user['id'], movie_id)
     movie = query_movie_by_id(movie_id)
     keywords = query_keywords_by_id(movie_id)
     actors = query_actors_by_id(movie_id)
     genres = query_genres_by_id(movie_id)
     director = query_director_by_id(movie_id)
     added_to_favourite, added_to_watchlist = query_like_status_by_id(g.user['id'], movie_id)
-    print(added_to_favourite, added_to_watchlist)
+    # print(added_to_favourite, added_to_watchlist)
     return render_template('movie_detail.html', movie=movie, genres=genres, keywords=keywords, actors=actors,
                            director=director, added_to_watchlist=added_to_watchlist,
-                           added_to_favourite=added_to_favourite)
+                           added_to_favourite=added_to_favourite, reviews=reviews)
 
 @main_bp.route('/search', methods=['GET'])
 def search():

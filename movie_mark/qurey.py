@@ -207,4 +207,23 @@ def like_movie(user_id, movie_id, watched):
     ''', (user_id, movie_id, watched, datetime.now()))
     con.commit()
 
+def create_review(user_id, movie_id, content):
+    print('!!')
+    con = get_db()
+    cursor = con.cursor()
+    cursor.execute(f'''
+        INSERT INTO review(user_id, movie_id, content, post_time)
+        VALUES(?, ?, ?, ?)
+    ''', (user_id, movie_id, content, datetime.now()))
+    con.commit()
+
+def query_review_by_user_and_movie(user_id, movie_id):
+    cursor = get_db().cursor()
+    res = cursor.execute(f'''
+        SELECT *
+        FROM review
+        WHERE user_id=? AND movie_id=?
+    ''', (user_id, movie_id))
+    return res.fetchall()
+
 

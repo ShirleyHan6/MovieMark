@@ -84,3 +84,15 @@ CREATE TABLE like_movie (
 );
 
 CREATE INDEX like_movie_index ON like_movie(user_id, movie_id);
+
+CREATE TABLE review (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    movie_id INTEGER,
+    content TEXT,
+    post_time DATETIME,
+    FOREIGN KEY (user_id) REFERENCES user(id),
+    FOREIGN KEY (movie_id) REFERENCES movie(id)
+);
+
+CREATE INDEX review_index ON review(user_id, movie_id);
