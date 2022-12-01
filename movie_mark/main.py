@@ -30,6 +30,7 @@ def detail():
     movie = query_movie_by_id(movie_id)
     keywords = query_keywords_by_id(movie_id)
     actors = query_actors_by_id(movie_id)
+    # print(movie_id)
     genres = query_genres_by_id(movie_id)
     director = query_director_by_id(movie_id)
     added_to_favourite, added_to_watchlist = query_like_status_by_id(g.user['id'], movie_id)

@@ -57,6 +57,7 @@ def get_director_or_actor_id(name):
             WHERE name = ?
         ''', (name,))
     p_id = res.fetchone()
+    # print(p_id[0])
     if p_id is None:
         return -1
     return p_id[0]
@@ -153,8 +154,9 @@ def insert_actor(actor: list):
         res = cursor.execute(f'''
             SELECT count(1) FROM people p WHERE p.name = ?
         ''', (a,))
-
-        exist = res.fetchone()[0] > 0
+        res_cnt = res.fetchone()[0]
+        exist = res_cnt > 0
+        # print(res_cnt)
         if not exist:
             cursor.execute(f'''
                 INSERT INTO people(name)
@@ -183,10 +185,11 @@ def insert_act_in(actor: list, movie_id):
     connection = db_connection.get_connection()
     cursor = connection.cursor()
     for a in actor:
+        # print(a, get_director_or_actor_id(a))
         cursor.execute(f'''
             INSERT INTO act_in(movie_id, actor_id)
             VALUES(?, ?)
-        ''', (get_director_or_actor_id(a), movie_id,))
+        ''', (movie_id, get_director_or_actor_id(a)))
     # connection.commit()
 
 def insert_has_keyword(keyword: list, movie_id):
