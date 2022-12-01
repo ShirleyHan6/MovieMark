@@ -1,6 +1,5 @@
 import os.path
-import requests
-from http import HTTPStatus
+from url_validator import get_invalid_url_set
 import pandas as pd
 import sqlite3
 
@@ -10,6 +9,7 @@ DATABASE_URL = './movie_mark/movie.sqlite'
 class DBConnection:
     def __init__(self):
         self.connection = None
+        self.cnt = 0
 
     def get_connection(self):
         if self.connection is None:
@@ -18,6 +18,12 @@ class DBConnection:
 
     def get_cursor(self):
         return self.get_connection().cursor()
+
+    def inc(self):
+        self.cnt += 1
+
+    def commit(self):
+        self.get_connection().commit()
 
 
 db_connection = DBConnection()
@@ -110,7 +116,7 @@ def insert_genre(genre: list):
                 INSERT INTO genre(genre)
                 VALUES(?)
             ''', (g,))
-    connection.commit()
+    # connection.commit()
 
 
 def insert_keyword(keyword: list):
@@ -129,7 +135,7 @@ def insert_keyword(keyword: list):
                 INSERT INTO keyword(word)
                 VALUES(?)
             ''', (k,))
-    connection.commit()
+    # connection.commit()
 
 
 def insert_director(director):
@@ -154,7 +160,7 @@ def insert_actor(actor: list):
                 INSERT INTO people(name)
                 VALUES(?)
             ''', (a,))
-    connection.commit()
+    # connection.commit()
 
 
 def insert_is_genre(genre, movie_id):
@@ -168,7 +174,7 @@ def insert_is_genre(genre, movie_id):
             INSERT INTO is_genre(genre_id, movie_id)
             VALUES(?, ?)
         ''', (genre_id, movie_id))
-    connection.commit()
+    # connection.commit()
 
 
 def insert_act_in(actor: list, movie_id):
@@ -181,7 +187,7 @@ def insert_act_in(actor: list, movie_id):
             INSERT INTO act_in(movie_id, actor_id)
             VALUES(?, ?)
         ''', (get_director_or_actor_id(a), movie_id,))
-    connection.commit()
+    # connection.commit()
 
 def insert_has_keyword(keyword: list, movie_id):
     if keyword is None:
@@ -193,23 +199,19 @@ def insert_has_keyword(keyword: list, movie_id):
             INSERT INTO has_keyword(keyword_id, movie_id)
             VALUES(?, ?)
         ''', (get_keyword_id(a), movie_id,))
-    connection.commit()
+    # connection.commit()
 
 
 def imdb_insert_movie(**kwargs):
-    def validate_img_link(link):
-        if requests.head(link).status_code != HTTPStatus.OK:
-            return None
-        return link
     connection = db_connection.get_connection()
     cursor = connection.cursor()
     cursor.execute(f'''
                 INSERT INTO movie(id, title, poster_link, year, imdb_rating, runtime, overview, director_id)
                 VALUES(?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (kwargs['movie_id'], kwargs['title'], validate_img_link(kwargs['poster_link']),
+            ''', (kwargs['movie_id'], kwargs['title'], kwargs['poster_link'],
                   kwargs['year'], kwargs['rating'], kwargs['runtime'], kwargs['overview'],
                   get_director_or_actor_id(kwargs['director'])))
-    connection.commit()
+    # connection.commit()
 
 
 def tmdb_insert_movie(**kwargs):
@@ -242,15 +244,18 @@ def tmdb_insert_movie(**kwargs):
             movie_id
         ))
 
-    connection.commit()
+    # connection.commit()
 
 
 def import_imdb_dataset(base=0):
     imdb_df = pd.read_csv("./imdb_top_1000.csv")
     cnt = base
+    invalid_url = get_invalid_url_set()
     for index, row in imdb_df.iterrows():
-        movie_id = index + base
         poster_link = row['Poster_Link']
+        if poster_link in invalid_url:
+            poster_link = None
+        movie_id = index + base
         series_title = row['Series_Title']
         release_year = row['Released_Year']
         runtime = row['Runtime']
@@ -269,7 +274,11 @@ def import_imdb_dataset(base=0):
         insert_is_genre(genre, movie_id)
         insert_act_in(star, movie_id)
         cnt += 1
+        db_connection.inc()
+        if db_connection.cnt % 1000 == 0:
+            db_connection.commit()
         print(f'''inserted {cnt} movies''')
+    db_connection.commit()
     return cnt
 
 
@@ -305,7 +314,11 @@ def import_tmdb_dataset(base=0):
         insert_act_in(cast, movie_id)
         insert_has_keyword(keyword, movie_id)
         cnt += 1
+        db_connection.inc()
         print(f'''inserted {cnt} movies''')
+        if db_connection.cnt % 1000 == 0:
+            db_connection.commit()
+    db_connection.commit()
     return cnt
 
 def delete_all():
